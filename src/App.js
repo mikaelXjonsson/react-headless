@@ -31,38 +31,70 @@ import './App.css';
 function App() {
   const [data, setData] = useState([]);
   const [showData, setShowData] = useState(false);
-  const [hasFetched, setHasFetched] = useState(false);
+  const [shipName, setShipName] = useState('');
+  const [shipCapacity, setShipCapacity] = useState('');
+
+  const fetchData = () => {
+    fetch('https://newmetsaapi.azurewebsites.net/api/ships/')
+      .then((response) => response.json())
+      .then((data) => setData(data));
+  };
 
   const toggleData = () => {
-    if (!hasFetched) {
-      fetch('https://newmetsaapi.azurewebsites.net/api/ships')
-        .then((response) => response.json())
-        .then((data) => {
-          setData(data);
-          setHasFetched(true);
-          setShowData(true);
-        });
+    if (showData) {
+      setShowData(false);
     } else {
-      setShowData(!showData);
+      fetchData();
+      setShowData(true);
     }
+  };
+
+  const addShip = () => {
+    fetch('https://newmetsaapi.azurewebsites.net/api/ships/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: shipName,
+        capacity: parseInt(shipCapacity),
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        fetchData();
+        setShipName('');
+        setShipCapacity('');
+      });
   };
 
   return (
     <div className='App'>
       <h1>Testing</h1>
       <button onClick={toggleData}>
-        {showData ? 'Hide Data' : 'Load Data'}
+        {showData ? 'Hide Data' : 'Show Data'}
       </button>
-
       {showData &&
         data.map((ship) => (
           <div key={ship.id}>
             <h2>{ship.name}</h2>
-            <p>Capacity: {ship.capacity}</p>
+            <div>Capacity: {ship.capacity}</div>
           </div>
         ))}
+      <div>
+        <input
+          value={shipName}
+          onChange={(e) => setShipName(e.target.value)}
+          placeholder='Ship Name'
+        />
+        <input
+          type='number'
+          value={shipCapacity}
+          onChange={(e) => setShipCapacity(e.target.value)}
+          placeholder='Ship Capacity'
+        />
+        <button onClick={addShip}>Add Ship</button>
+      </div>
     </div>
   );
 }
-
-export default App;
